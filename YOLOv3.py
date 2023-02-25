@@ -66,7 +66,7 @@ class VOCMetric(Metric):
                  map_type='11point',
                  is_bbox_normalized=False,
                  evaluate_difficult=False,
-                 classwise=False,
+                 classwise=True,
                  output_eval=None,
                  save_prediction_only=False):
         # assert os.path.isfile(label_list), \

@@ -166,7 +166,7 @@ class DetectionMAP(object):
         for cname in catid2name.values():
             self.classes.append(cname)
         self.reset()
-
+		
     def update(self, bbox, score, label, gt_box, gt_label, difficult=None):
         """
         Update metric statics from given prediction and ground
@@ -174,12 +174,15 @@ class DetectionMAP(object):
         """
         if difficult is None:
             difficult = np.zeros_like(gt_label)
-        print("score:{}".format(score))
 
-        # # record class gt count
-        # for gtl, diff in zip(gt_label, difficult):
-        #     if self.evaluate_difficult or int(diff) == 0:
-        #         self.class_gt_counts[int(np.array(gtl))] += 1
+        # print("label:{}, score:{}".format(label, score))
+        # print("gt_box:{}".format(gt_box))
+        # print("bbox:{}".format(bbox))
+
+        # record class gt count
+        for gtl, diff in zip(gt_label, difficult):
+            if self.evaluate_difficult or int(diff) == 0:
+                self.class_gt_counts[int(np.array(gtl))] += 1
 
         # record class score positive
         visited = [False] * len(gt_label)
@@ -189,17 +192,25 @@ class DetectionMAP(object):
             max_overlap = -1.0
             for i, gl in enumerate(gt_label):
                 if int(gl) == int(l):
+                    x1 = gt_box[i][0] - gt_box[i][2]/2
+                    x2 = gt_box[i][0] + gt_box[i][2]/2
+                    y1 = gt_box[i][1] - gt_box[i][3]/2
+                    y2 = gt_box[i][1] + gt_box[i][3]/2
+                    gt_loc = [x1, y1, x2, y2]
                     if len(gt_box[i]) == 8:
                         overlap = calc_rbox_iou(pred, gt_box[i])
                     else:
-                        overlap = jaccard_overlap(pred, gt_box[i])
+                        # overlap = jaccard_overlap(pred, gt_box[i])
+                        overlap = jaccard_overlap(pred, gt_loc)
+                        # if gt_box[i][0] < 1:
+                        #     print("[DetectionMAP-update] pred:{},\n gt_label:{}".format(pred, gt_loc))
+                        #     if overlap > 0:
+                        #         print("overlap:{}".format(overlap))
                     if overlap > max_overlap:
                         max_overlap = overlap
                         max_idx = i
 
-            """
-            获得不同label的得分情况
-            """
+            # 描述预测准确情况，正确者置为1
             if max_overlap > self.overlap_thresh:
                 if self.evaluate_difficult or \
                         int(np.array(difficult[max_idx])) == 0:
