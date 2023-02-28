@@ -404,3 +404,23 @@ def multiclass_nms(bboxes, scores, score_thresh=0.01, nms_thresh=0.45, pre_nms_t
         rets.append(ret_i)
 
     return rets
+	
+# 图像锐化 强调边缘值
+def sharpen(grayImage, threshold=120):
+    #Prewitt算子
+    kernelx = np.array([[1,1,1],[0,0,0],[-1,-1,-1]],dtype=int)
+    kernely = np.array([[-1,0,1],[-1,0,1],[-1,0,1]],dtype=int)
+    x = cv2.filter2D(grayImage, cv2.CV_16S, kernelx)
+    y = cv2.filter2D(grayImage, cv2.CV_16S, kernely)
+    #转uint8
+    absX = cv2.convertScaleAbs(x)       
+    absY = cv2.convertScaleAbs(y)    
+    Prewitt = cv2.addWeighted(absX,0.5,absY,0.5,0) # param1,param3 are weight
+    Prewitt = 255 - Prewitt
+    # with open(root+'work/mtx.txt', 'w') as f:
+    #     f.write(str(img_rdif))
+    indices = np.where(Prewitt < threshold)
+    prew_arr = np.ones((Prewitt.shape), dtype='uint8')
+    prew_arr = prew_arr * 255
+    prew_arr[indices] = 0
+    return prew_arr
